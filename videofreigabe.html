@@ -229,11 +229,17 @@
 
 <script>
 // ---------- State ----------
-let config = { n8nListUrl: '', n8nCreateUrl: '', n8nGetUrl: '', n8nPostUrl: '', n8nBaustellenUrl: '' };
+let config = {
+  n8nListUrl: 'https://n8n.ichbindeinmaler.de/webhook/freigabe-liste',
+  n8nCreateUrl: 'https://n8n.ichbindeinmaler.de/webhook/freigabe-anlegen',
+  n8nGetUrl: 'https://n8n.ichbindeinmaler.de/webhook/freigabe-abrufen',
+  n8nPostUrl: 'https://n8n.ichbindeinmaler.de/webhook/freigabe-bestaetigen',
+  n8nBaustellenUrl: 'https://n8n.ichbindeinmaler.de/webhook/baustellen-liste',
+};
 let baustellenListe = [];
-let demoMode = true;
-let demoModeIntern = true;
-let demoModeExtern = true;
+let demoMode = !(config.n8nListUrl && config.n8nCreateUrl);
+let demoModeIntern = !(config.n8nListUrl && config.n8nCreateUrl);
+let demoModeExtern = !(config.n8nGetUrl && config.n8nPostUrl);
 let records = [];
 let posCounter = 0;
 let currentPositions = [];
@@ -659,7 +665,13 @@ if(linkedCode){
       switchTab('kunde');
     });
 } else {
+  document.getElementById('cfgN8nList').value = config.n8nListUrl;
+  document.getElementById('cfgN8nCreate').value = config.n8nCreateUrl;
+  document.getElementById('cfgN8nGet').value = config.n8nGetUrl;
+  document.getElementById('cfgN8nPost').value = config.n8nPostUrl;
+  document.getElementById('cfgN8nBaustellen').value = config.n8nBaustellenUrl;
   loadRecords();
+  loadBaustellen();
 }
 
 </script>
