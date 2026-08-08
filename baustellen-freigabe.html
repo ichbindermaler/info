@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baustellen-Freigabe — Prototyp</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{
+    --bg: #FFFFFF;
+    --ink: #1A1A18;
+    --ink-soft: #6B6B66;
+    --line: #E6E3DD;
+    --card: #FFFFFF;
+    --blue: #E3001B;
+    --blue-dark: #920E14;
+    --blue-soft: #FBE4E6;
+    --ochre: #B8862E;
+    --ochre-soft: #F5EBDA;
+    --sage: #4C7A5A;
+    --sage-soft: #E7F0E9;
+    --brick: #B90619;
+    --brick-soft: #FBE4E6;
+  }
+  *{box-sizing:border-box;}
+  @font-face{ font-family:'Bradley Hand ITC'; src:local('Bradley Hand ITC'), local('Bradley Hand'); }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: 'Avenir Next LT Pro', 'Avenir Next', 'Avenir', Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; letter-spacing:0.01em;}
+  header.app{
+    padding:18px 20px 14px; border-bottom:1px solid var(--line); background:var(--card);
+    position:sticky; top:0; z-index:5;
+  }
+  header.app{ border-top:4px solid var(--blue);}
+  .brand{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .brand-left{ display:flex; align-items:center; gap:10px;}
+  .logo-badge{
+    width:38px; height:38px; border-radius:50%; flex:none;
+    background:linear-gradient(135deg, var(--blue), var(--blue-dark));
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px; letter-spacing:-0.02em;
+  }
+  .brand h1{ font-size:17px; margin:0; letter-spacing:0.01em; font-weight:800;}
+  .brand .eyebrow{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--ink-soft); font-weight:700;}
+  .brand .slogan{ font-family:'Bradley Hand ITC','Bradley Hand', cursive; color:var(--blue); font-size:13px; margin-top:1px;}
+  .tabs{ display:flex; gap:6px; margin-top:12px;}
+  .tab{
+    flex:1; text-align:center; padding:9px 10px; border-radius:8px; font-size:13px; font-weight:700;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); cursor:pointer;
+  }
+  .tab.active{ background:linear-gradient(135deg, var(--blue), var(--blue-dark)); color:#fff; border-color:var(--blue-dark);}
+  main{ max-width:640px; margin:0 auto; padding:16px; padding-bottom:60px;}
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px;}
+  .card h2{ font-size:14px; margin:0 0 10px; letter-spacing:0.02em;}
+  label{ display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; margin:10px 0 4px;}
+  label:first-child{ margin-top:0;}
+  input[type=text], input[type=number], input[type=url], textarea, select{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; font-size:14px;
+    background:#fff; color:var(--ink); font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:50px;}
+  .row{ display:flex; gap:8px;}
+  .row > *{ flex:1;}
+  button{ font-family:inherit; cursor:pointer; border:none; border-radius:8px; font-weight:700; font-size:13.5px; }
+  .btn-primary{ background:linear-gradient(135deg, var(--blue), var(--blue-dark)); color:#fff; padding:10px 14px; width:100%; margin-top:12px;}
+  .btn-primary:disabled{ opacity:0.45; cursor:not-allowed;}
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); padding:6px 10px; font-size:12.5px;}
+  .btn-sm{ padding:5px 9px; font-size:12px; border-radius:6px;}
+  .add-pos{ background:var(--bg); border:1px dashed var(--line); color:var(--ink-soft); padding:8px; width:100%; margin-top:6px;}
+
+  .pos-row{ display:flex; align-items:flex-start; gap:8px; border:1px solid var(--line); border-radius:8px; padding:8px; margin-top:6px;}
+  .pos-row input{ font-size:13px; padding:7px 8px;}
+  .swatch{ width:10px; min-width:10px; border-radius:3px; align-self:stretch;}
+  .swatch.grund{ background:#C7C2B4; }
+  .swatch.zusatz{ background:var(--ochre);}
+
+  .config-toggle{ font-size:12px; color:var(--ink-soft); text-align:right; cursor:pointer; margin-top:8px; text-decoration:underline;}
+  .config-box{ display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .config-box.open{ display:block;}
+  .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
+
+  .rec-card{ display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--line); border-radius:10px; margin-top:8px; background:#fff;}
+  .rec-card .meta{ font-size:12.5px; color:var(--ink-soft);}
+  .rec-card .name{ font-weight:700; font-size:14px;}
+  .status-chip{ font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:99px; text-transform:uppercase; letter-spacing:0.04em;}
+  .status-chip.Offen{ background:#EFEFEC; color:var(--ink-soft);}
+  .status-chip.Zusatzauftrag-beauftragt{ background:var(--ochre-soft); color:var(--ochre);}
+  .status-chip.Zusatzauftrag-bestätigt{ background:var(--sage-soft); color:var(--sage);}
+  .status-chip.Erledigt{ background:var(--sage-soft); color:var(--sage);}
+
+  /* Kunden-Ansicht */
+  .video-wrap{ background:#111; border-radius:10px; overflow:hidden; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;}
+  .video-wrap video{ width:100%; height:100%; object-fit:cover;}
+  .video-fallback{ color:#cfcfcf; font-size:13px; text-align:center; padding:20px;}
+  .video-fallback a{ color:#9fc0e0;}
+
+  .item{ display:flex; gap:10px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .item:last-child{ border-bottom:none;}
+  .item .swatch{ width:8px; border-radius:3px;}
+  .item .body{ flex:1;}
+  .item .desc{ font-size:14px; font-weight:600;}
+  .item .price{ font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .zusatz-actions{ display:flex; gap:8px; margin-top:8px;}
+  .btn-approve{ background:var(--sage); color:#fff; flex:1; padding:8px;}
+  .btn-reject{ background:transparent; border:1px solid var(--brick); color:var(--brick); flex:1; padding:8px;}
+  .btn-approve.picked{ box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--sage);}
+  .btn-reject.picked{ background:var(--brick-soft);}
+
+  .abnahme-btn{ background:linear-gradient(135deg, var(--blue), var(--blue-dark)); color:#fff; width:100%; padding:14px; font-size:15px; margin-top:16px;}
+  .abnahme-btn:disabled{ opacity:0.4;}
+
+  .stamp{
+    display:none; text-align:center; margin-top:16px; padding:18px; border:3px solid var(--sage); border-radius:10px;
+    color:var(--sage); font-weight:900; letter-spacing:0.08em; font-size:15px; transform:rotate(-3deg); text-transform:uppercase;
+    animation: stampIn 0.35s ease-out;
+  }
+  .stamp.show{ display:block;}
+  @keyframes stampIn{ from{ opacity:0; transform:scale(1.4) rotate(-3deg);} to{ opacity:1; transform:scale(1) rotate(-3deg);} }
+  .stamp .ts{ display:block; font-size:11px; font-weight:600; letter-spacing:0.02em; text-transform:none; margin-top:4px; color:var(--ink-soft);}
+
+  .empty{ text-align:center; color:var(--ink-soft); font-size:13px; padding:20px 0;}
+  .toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff;
+    padding:9px 16px; border-radius:99px; font-size:12.5px; opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .toast.show{ opacity:1;}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="brand">
+    <div class="brand-left">
+      <div class="logo-badge">MB</div>
+      <div>
+        <div class="eyebrow">Malerbetrieb Bäßgen · seit 1907</div>
+        <h1>Baustellen-Freigabe · Prototyp</h1>
+        <div class="slogan">über 100 Johr joot</div>
+      </div>
+    </div>
+    <span class="config-toggle" onclick="toggleConfig()">NocoDB-Verbindung</span>
+  </div>
+  <div class="config-box" id="configBox">
+    <label>n8n-Webhook: Aufträge auflisten (GET)</label>
+    <input type="text" id="cfgN8nList" placeholder="https://n8n.malerbetrieb-baessgen.de/webhook/freigabe-liste">
+    <label>n8n-Webhook: Auftrag anlegen (POST)</label>
+    <input type="text" id="cfgN8nCreate" placeholder="https://n8n.malerbetrieb-baessgen.de/webhook/freigabe-anlegen">
+    <label>n8n-Webhook: Auftrag abrufen per Code (GET)</label>
+    <input type="text" id="cfgN8nGet" placeholder="https://n8n.malerbetrieb-baessgen.de/webhook/freigabe-abrufen">
+    <label>n8n-Webhook: Abnahme bestätigen (POST)</label>
+    <input type="text" id="cfgN8nPost" placeholder="https://n8n.malerbetrieb-baessgen.de/webhook/freigabe-bestaetigen">
+    <label>n8n-Webhook: Baustellen auflisten (GET)</label>
+    <input type="text" id="cfgN8nBaustellen" placeholder="https://n8n.ichbindeinmaler.de/webhook/baustellen-liste">
+    <button class="btn-ghost" style="margin-top:8px;" onclick="saveConfig()">Verbindung speichern</button>
+    <div class="hint">Der Browser spricht nie direkt mit NocoDB — weder als Mitarbeiter noch als Kunde. Alles läuft über diese vier n8n-Webhooks, der NocoDB-Token liegt nur in n8n. Ohne Adressen läuft der Prototyp im Demo-Modus mit einem Beispiel-Auftrag.</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tabMitarbeiter" onclick="switchTab('mitarbeiter')">Mitarbeiter</div>
+    <div class="tab" id="tabKunde" onclick="switchTab('kunde')">Kunden-Ansicht</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- MITARBEITER VIEW -->
+  <div id="viewMitarbeiter">
+    <div class="card">
+      <h2>Neuen Auftrag anlegen</h2>
+      <label>Baustelle (aus NocoDB, füllt Kunde/Adresse automatisch)</label>
+      <select id="fBaustelleSelect" onchange="fillFromBaustelle(this)">
+        <option value="">— manuell eintragen —</option>
+      </select>
+      <label>Kunde</label>
+      <input type="text" id="fKunde" placeholder="Name des Kunden">
+      <label>Adresse / Baustelle</label>
+      <input type="text" id="fAdresse" placeholder="Straße, Ort">
+      <label>Video-Link (z.B. aus WhatsApp/Google Drive)</label>
+      <input type="url" id="fVideo" placeholder="https://...  .mp4">
+      <div class="hint">Direkter Video-Upload aus dem Tool kommt als nächster Schritt — bis dahin: Video irgendwo hochladen (WhatsApp-Weiterleitung, Google Drive o.ä.) und den Link hier einfügen.</div>
+
+      <div class="row">
+        <div>
+          <label>Telefon (für SMS)</label>
+          <input type="text" id="fTelefon" placeholder="+49 …">
+        </div>
+        <div>
+          <label>E-Mail (für Mail-Versand)</label>
+          <input type="text" id="fEmail" placeholder="kunde@beispiel.de">
+        </div>
+      </div>
+
+      <label>Positionen</label>
+      <div id="posList"></div>
+      <button class="add-pos" onclick="addPosRow()">+ Position hinzufügen</button>
+      <div class="hint">Typ „Grundarbeit" = bereits vereinbart, nur zur Info. Typ „Zusatzangebot" = Kunde muss aktiv freigeben.</div>
+
+      <button class="btn-primary" onclick="createAuftrag()">Auftrag speichern &amp; Link erzeugen</button>
+    </div>
+
+    <div class="card">
+      <h2>Laufende Aufträge</h2>
+      <div id="recList"><div class="empty">Lädt…</div></div>
+    </div>
+
+    <div class="card">
+      <h2 style="color:var(--ink-soft);">Aufbau dahinter</h2>
+      <div class="hint mono" style="line-height:1.6;">
+        NocoDB-Tabelle "freigaben":<br>
+        kunde (Text) · adresse (Text) · video_url (Text)<br>
+        status (Single Select: Offen / Zusatzauftrag beauftragt / Zusatzauftrag bestätigt / Erledigt)<br>
+        positionen (Long Text, JSON) · bestaetigt_am (Date & Time)<br>
+        code (Text) · telefon (Text) · email (Email)
+      </div>
+      <div class="hint">Der Browser spricht nie direkt mit NocoDB, auch nicht als Mitarbeiter — alles läuft über die vier n8n-Webhooks oben. Für automatischen SMS-Versand: im n8n-Workflow "Auftrag anlegen" am Ende einen SMS-Gateway-Node (z.B. seven.io) ergänzen.</div>
+    </div>
+  </div>
+
+  <!-- KUNDEN VIEW -->
+  <div id="viewKunde" style="display:none;">
+    <div id="kundeContent"></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- State ----------
+let config = { n8nListUrl: '', n8nCreateUrl: '', n8nGetUrl: '', n8nPostUrl: '', n8nBaustellenUrl: '' };
+let baustellenListe = [];
+let demoMode = true;
+let demoModeIntern = true;
+let demoModeExtern = true;
+let records = [];
+let posCounter = 0;
+let currentPositions = [];
+let currentRecordId = null;
+let currentTab = 'mitarbeiter';
+let activeRecord = null;   // aktuell in der Kunden-Ansicht angezeigter Auftrag
+let activeMode = 'internal'; // 'internal' = Vorschau durch Mitarbeiter, 'external' = echter Kunden-Link per Code
+
+const demoRecord = {
+  Id: 1,
+  Code: 'demo123456',
+  Kunde: 'Familie Hoffmann',
+  Adresse: 'Lindenweg 4, Hennef',
+  VideoURL: '',
+  Status: 'Offen',
+  Positionen: JSON.stringify([
+    { id:1, art:'grund', beschreibung:'Wohnzimmer Decke & Wände gestrichen (RAL 9010)', preis:0, status:'erledigt' },
+    { id:2, art:'grund', beschreibung:'Fensterlaibungen gespachtelt & grundiert', preis:0, status:'erledigt' },
+    { id:3, art:'zusatz', beschreibung:'Ecke Flur: Riss spachteln & nachstreichen', preis:85, status:'offen' },
+    { id:4, art:'zusatz', beschreibung:'Heizkörper mitstreichen (nicht im Ursprungsauftrag)', preis:60, status:'offen' }
+  ]),
+  Bestaetigt: null
+};
+
+// ---------- Config ----------
+function toggleConfig(){
+  document.getElementById('configBox').classList.toggle('open');
+}
+function saveConfig(){
+  config.n8nListUrl = document.getElementById('cfgN8nList').value.trim();
+  config.n8nCreateUrl = document.getElementById('cfgN8nCreate').value.trim();
+  config.n8nGetUrl = document.getElementById('cfgN8nGet').value.trim();
+  config.n8nPostUrl = document.getElementById('cfgN8nPost').value.trim();
+  config.n8nBaustellenUrl = document.getElementById('cfgN8nBaustellen').value.trim();
+  demoModeIntern = !(config.n8nListUrl && config.n8nCreateUrl);
+  demoModeExtern = !(config.n8nGetUrl && config.n8nPostUrl);
+  demoMode = demoModeIntern; // für Rückwärtskompatibilität in ein paar Stellen unten
+  showToast(demoModeIntern ? 'Mitarbeiter-Seite: Demo-Modus' : 'Mitarbeiter-Seite: mit n8n verbunden');
+  loadRecords();
+  loadBaustellen();
+}
+
+// Übersetzung: echte NocoDB-Feldnamen -> Tool-interne Feldnamen (die n8n-Workflows
+// schicken die rohe NocoDB-Antwort durch, kein Umbenennen in n8n nötig)
+function fromNoco(rec){
+  return {
+    Id: rec.Id,
+    Kunde: rec.kunde,
+    Adresse: rec.adresse,
+    VideoURL: rec.video_url,
+    Telefon: rec.telefon,
+    Email: rec.email,
+    Code: rec.code,
+    Status: rec.status,
+    Positionen: rec.positionen,
+    Bestaetigt: rec.bestaetigt_am,
+  };
+}
+
+// Alle vier Aufrufe laufen ausschließlich über n8n — der Browser kennt NocoDB nicht.
+async function n8nList(){
+  const res = await fetch(config.n8nListUrl);
+  if(!res.ok) throw new Error('Liste konnte nicht geladen werden (n8n ' + res.status + ')');
+  const data = await res.json();
+  return (data.list || []).map(fromNoco);
+}
+async function n8nCreate(rec){
+  const toNoco = {
+    kunde: rec.Kunde,
+    adresse: rec.Adresse,
+    video_url: rec.VideoURL,
+    telefon: rec.Telefon,
+    email: rec.Email,
+    code: rec.Code,
+    status: rec.Status,
+    positionen: rec.Positionen,
+  };
+  const res = await fetch(config.n8nCreateUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(toNoco)
+  });
+  if(!res.ok) throw new Error('Anlegen fehlgeschlagen (n8n ' + res.status + ')');
+  return res.json();
+}
+async function workerGetAuftrag(code){
+  const res = await fetch(`${config.n8nGetUrl}?code=${encodeURIComponent(code)}`);
+  if(!res.ok) throw new Error('Auftrag nicht gefunden (n8n ' + res.status + ')');
+  const data = await res.json();
+  const rec = data.list && data.list[0];
+  if(!rec) throw new Error('Kein Auftrag mit diesem Code gefunden');
+  return fromNoco(rec);
+}
+async function workerBestaetigen(code, positionen, status){
+  const res = await fetch(config.n8nPostUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, positionen, status })
+  });
+  if(!res.ok) throw new Error('Bestätigung fehlgeschlagen (n8n ' + res.status + ')');
+  return res.json();
+}
+
+function genCode(){
+  if(crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,'').slice(0,14);
+  return (Math.random().toString(36) + Date.now().toString(36)).replace(/[^a-z0-9]/g,'').slice(0,14);
+}
+
+// ---------- Baustellen-Dropdown ----------
+async function loadBaustellen(){
+  if(!config.n8nBaustellenUrl) return;
+  try{
+    const res = await fetch(config.n8nBaustellenUrl);
+    if(!res.ok) throw new Error('Baustellen-Liste fehlgeschlagen (n8n ' + res.status + ')');
+    const data = await res.json();
+    baustellenListe = data.list || [];
+    renderBaustellenSelect();
+  } catch(e){
+    showToast(e.message);
+  }
+}
+function renderBaustellenSelect(){
+  const el = document.getElementById('fBaustelleSelect');
+  if(!el) return;
+  el.innerHTML = '<option value="">— manuell eintragen —</option>' +
+    baustellenListe.map((b, i) => `<option value="${i}">${b.bezeichnung || 'ohne Namen'} · ${b.ort || ''}</option>`).join('');
+}
+function fillFromBaustelle(sel){
+  const idx = sel.value;
+  if(idx === '') return;
+  const b = baustellenListe[idx];
+  document.getElementById('fKunde').value = b.bezeichnung || '';
+  document.getElementById('fAdresse').value = [b.strasse, b.plz, b.ort].filter(Boolean).join(', ');
+}
+
+// ---------- Positions builder (Mitarbeiter) ----------
+function addPosRow(art){
+  posCounter++;
+  const id = posCounter;
+  currentPositions.push({ id, art: art || 'grund', beschreibung:'', preis:0, status: art==='zusatz' ? 'offen' : 'erledigt' });
+  renderPosList();
+}
+function removePosRow(id){
+  currentPositions = currentPositions.filter(p => p.id !== id);
+  renderPosList();
+}
+function updatePos(id, field, value){
+  const p = currentPositions.find(p => p.id === id);
+  if(!p) return;
+  p[field] = field === 'preis' ? parseFloat(value)||0 : value;
+  if(field === 'art'){ p.status = value === 'zusatz' ? 'offen' : 'erledigt'; }
+}
+function renderPosList(){
+  const el = document.getElementById('posList');
+  el.innerHTML = currentPositions.map(p => `
+    <div class="pos-row">
+      <div class="swatch ${p.art}"></div>
+      <div style="flex:1;">
+        <div class="row" style="margin-bottom:4px;">
+          <select onchange="updatePos(${p.id},'art',this.value)">
+            <option value="grund" ${p.art==='grund'?'selected':''}>Grundarbeit</option>
+            <option value="zusatz" ${p.art==='zusatz'?'selected':''}>Zusatzangebot</option>
+          </select>
+          <input type="number" placeholder="€" value="${p.preis||''}" onchange="updatePos(${p.id},'preis',this.value)">
+        </div>
+        <textarea placeholder="Beschreibung..." onchange="updatePos(${p.id},'beschreibung',this.value)">${p.beschreibung}</textarea>
+      </div>
+      <button class="btn-ghost btn-sm" onclick="removePosRow(${p.id})">✕</button>
+    </div>
+  `).join('') || '<div class="hint">Noch keine Positionen.</div>';
+}
+renderPosList();
+
+// ---------- Create Auftrag ----------
+async function createAuftrag(){
+  const kunde = document.getElementById('fKunde').value.trim();
+  const adresse = document.getElementById('fAdresse').value.trim();
+  const video = document.getElementById('fVideo').value.trim();
+  const telefon = document.getElementById('fTelefon').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  if(!kunde){ showToast('Bitte Kundennamen eintragen'); return; }
+
+  const payload = {
+    Kunde: kunde,
+    Adresse: adresse,
+    VideoURL: video,
+    Telefon: telefon,
+    Email: email,
+    Code: genCode(),
+    Status: 'Offen',
+    Positionen: JSON.stringify(currentPositions)
+  };
+
+  try{
+    if(demoMode){
+      payload.Id = records.length ? Math.max(...records.map(r=>r.Id))+1 : 2;
+      records.unshift(payload);
+      showToast('Auftrag angelegt (Demo-Modus, nicht gespeichert)');
+    } else {
+      await n8nCreate(payload);
+      showToast('Auftrag gespeichert');
+      await loadRecords();
+    }
+    document.getElementById('fKunde').value='';
+    document.getElementById('fAdresse').value='';
+    document.getElementById('fVideo').value='';
+    document.getElementById('fTelefon').value='';
+    document.getElementById('fEmail').value='';
+    currentPositions = [];
+    renderPosList();
+    renderRecList();
+  } catch(e){
+    showToast(e.message);
+  }
+}
+
+// ---------- Load & list records ----------
+async function loadRecords(){
+  try{
+    if(demoMode){
+      records = records.length ? records : [demoRecord];
+    } else {
+      records = await n8nList();
+    }
+  } catch(e){
+    showToast(e.message);
+    records = records.length ? records : [demoRecord];
+  }
+  renderRecList();
+}
+
+function renderRecList(){
+  const el = document.getElementById('recList');
+  if(!records.length){ el.innerHTML = '<div class="empty">Noch keine Aufträge.</div>'; return; }
+  el.innerHTML = records.map(r => `
+    <div class="rec-card">
+      <div>
+        <div class="name">${r.Kunde}</div>
+        <div class="meta">${r.Adresse||''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="status-chip ${r.Status.replace(/\s/g,'-')}">${r.Status}</div><br>
+        <button class="btn-ghost btn-sm" style="margin-top:6px;" onclick="openAsKunde(${r.Id})">Als Kunde öffnen →</button><br>
+        ${r.Telefon ? `<button class="btn-ghost btn-sm" style="margin-top:6px;" onclick="copyKundeLink('${r.Code}')">SMS-Link kopieren</button>` : ''}
+        ${r.Email ? `<button class="btn-ghost btn-sm" style="margin-top:6px;" onclick="mailKundeLink('${r.Code}')">Mail öffnen</button>` : ''}
+        ${(!r.Telefon && !r.Email) ? `<button class="btn-ghost btn-sm" style="margin-top:6px;" onclick="copyKundeLink('${r.Code}')">Link kopieren</button>` : ''}
+        ${r.Status === 'Zusatzauftrag beauftragt' ? `<button class="btn-approve btn-sm" style="margin-top:6px;" onclick="bestaetigeZusatzauftrag('${r.Code}')">Auftrag bestätigen</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function bestaetigeZusatzauftrag(code){
+  const rec = records.find(r => r.Code === code);
+  if(!rec) return;
+  try{
+    if(demoModeExtern){
+      rec.Status = 'Zusatzauftrag bestätigt';
+      showToast('Auftrag bestätigt (Demo-Modus)');
+    } else {
+      await workerBestaetigen(code, JSON.parse(rec.Positionen || '[]'), 'Zusatzauftrag bestätigt');
+      rec.Status = 'Zusatzauftrag bestätigt';
+      showToast('Auftrag bestätigt — Kunde kann informiert werden');
+    }
+  } catch(e){ showToast(e.message); }
+  renderRecList();
+}
+
+// ---------- Kunden view ----------
+function openAsKunde(id){
+  activeMode = 'internal';
+  activeRecord = records.find(r => r.Id === id);
+  switchTab('kunde');
+}
+
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tabMitarbeiter').classList.toggle('active', tab==='mitarbeiter');
+  document.getElementById('tabKunde').classList.toggle('active', tab==='kunde');
+  document.getElementById('viewMitarbeiter').style.display = tab==='mitarbeiter' ? 'block' : 'none';
+  document.getElementById('viewKunde').style.display = tab==='kunde' ? 'block' : 'none';
+  if(tab==='kunde') renderKundeView();
+}
+
+function renderKundeView(){
+  const el = document.getElementById('kundeContent');
+  const rec = activeRecord || records[0];
+  if(!rec){ el.innerHTML = '<div class="empty">Kein Auftrag ausgewählt. Im Reiter „Mitarbeiter" einen Auftrag anlegen oder öffnen.</div>'; return; }
+
+  const positions = JSON.parse(rec.Positionen || '[]');
+  const grund = positions.filter(p => p.art === 'grund');
+  const zusatz = positions.filter(p => p.art === 'zusatz');
+  const done = ['Erledigt', 'Zusatzauftrag beauftragt', 'Zusatzauftrag bestätigt'].includes(rec.Status);
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:4px;">${rec.Kunde}</div>
+      <div class="video-wrap">
+        ${ rec.VideoURL
+          ? `<video controls src="${rec.VideoURL}"></video>`
+          : `<div class="video-fallback">Kein Video hinterlegt.<br>In der echten Version erscheint hier das Baustellen-Video.</div>` }
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Erledigte Arbeiten</h2>
+      ${grund.map(p => `
+        <div class="item">
+          <div class="swatch grund"></div>
+          <div class="body">
+            <div class="desc">${p.beschreibung}</div>
+            <div class="price">im Auftrag enthalten</div>
+          </div>
+        </div>
+      `).join('') || '<div class="hint">Keine Einträge.</div>'}
+    </div>
+
+    ${zusatz.length ? `
+    <div class="card">
+      <h2>Zusätzlich vorgeschlagen</h2>
+      ${zusatz.map(p => `
+        <div class="item">
+          <div class="swatch zusatz"></div>
+          <div class="body">
+            <div class="desc">${p.beschreibung}</div>
+            <div class="price">${p.preis ? p.preis.toFixed(2)+' €' : 'Preis auf Anfrage'}</div>
+            <div class="zusatz-actions">
+              <button class="btn-approve ${p.status==='freigegeben'?'picked':''}" onclick="setPosStatus(${p.id},'freigegeben')" ${done?'disabled':''}>Freigeben</button>
+              <button class="btn-reject ${p.status==='abgelehnt'?'picked':''}" onclick="setPosStatus(${p.id},'abgelehnt')" ${done?'disabled':''}>Ablehnen</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    ${(() => {
+      const hatZusatz = zusatz.some(p => p.status === 'freigegeben');
+      const label = done ? 'Bereits gesendet' : (hatZusatz ? 'Zusatzauftrag beauftragen' : 'Rückmeldung senden');
+      const hinweis = hatZusatz
+        ? 'Mit dem Absenden beauftragen Sie die oben freigegebenen Zusatzarbeiten. Wir bestätigen Ihnen den Auftrag im Anschluss.'
+        : 'Diese Rückmeldung bestätigt, dass Sie das Video gesehen haben. Sie ersetzt keine förmliche Bauabnahme.';
+      return `
+    <button class="abnahme-btn" id="abnahmeBtn" onclick="confirmAbnahme()" ${done?'disabled':''}>${label}</button>
+    <div class="hint" style="text-align:center; margin-top:6px;">${hinweis}</div>`;
+    })()}
+    <div class="stamp ${done?'show':''}" id="stamp">
+      ${rec.Status === 'Zusatzauftrag beauftragt' ? 'Auftrag übermittelt' : 'Rückmeldung erhalten'}
+      <span class="ts">${rec.Bestaetigt ? new Date(rec.Bestaetigt).toLocaleString('de-DE') : ''}</span>
+    </div>
+  `;
+  window._kPositions = positions;
+}
+
+function setPosStatus(id, status){
+  const p = window._kPositions.find(p => p.id === id);
+  if(!p) return;
+  p.status = p.status === status ? 'offen' : status;
+  activeRecord.Positionen = JSON.stringify(window._kPositions);
+  renderKundeView();
+}
+
+async function confirmAbnahme(){
+  const rec = activeRecord;
+  const positionen = window._kPositions;
+  const hatZusatz = positionen.some(p => p.art === 'zusatz' && p.status === 'freigegeben');
+  const neuerStatus = hatZusatz ? 'Zusatzauftrag beauftragt' : 'Erledigt';
+  try{
+    if(demoModeExtern){
+      rec.Status = neuerStatus;
+      rec.Bestaetigt = new Date().toISOString();
+      showToast('Rückmeldung gesendet (Demo-Modus)');
+    } else {
+      await workerBestaetigen(rec.Code, positionen, neuerStatus);
+      rec.Status = neuerStatus;
+      rec.Bestaetigt = new Date().toISOString();
+      showToast(hatZusatz ? 'Zusatzauftrag übermittelt — vielen Dank' : 'Rückmeldung gespeichert — vielen Dank');
+    }
+  } catch(e){ showToast(e.message); }
+  renderRecList();
+  renderKundeView();
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+function mailKundeLink(code){
+  const rec = records.find(r => r.Code === code);
+  const url = `${location.origin}${location.pathname}?code=${code}`;
+  const subject = encodeURIComponent(`Ihre Baustellen-Freigabe — Malerbetrieb Bäßgen`);
+  const body = encodeURIComponent(`Guten Tag ${rec.Kunde},\n\nbitte werfen Sie kurz einen Blick auf das Video Ihrer Baustelle und geben Sie uns über diesen Link kurz Rückmeldung:\n${url}\n\nViele Grüße\nMalerbetrieb Bäßgen`);
+  window.location.href = `mailto:${rec.Email}?subject=${subject}&body=${body}`;
+}
+
+function copyKundeLink(code){
+  const url = `${location.origin}${location.pathname}?code=${code}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast('Link kopiert — per SMS/WhatsApp an den Kunden schicken');
+  }).catch(()=>{
+    showToast(url);
+  });
+}
+
+// ---------- init ----------
+const urlParams = new URLSearchParams(location.search);
+const linkedCode = urlParams.get('code');
+
+if(linkedCode){
+  // Echter Kunden-Link: läuft über n8n, nie direkt über NocoDB
+  activeMode = 'external';
+  document.getElementById('tabMitarbeiter').style.display = 'none';
+  document.getElementById('configBox').classList.remove('open');
+  document.querySelector('.config-toggle').style.display = 'none';
+  workerGetAuftrag(linkedCode)
+    .then(rec => { activeRecord = { ...rec, Code: linkedCode }; switchTab('kunde'); })
+    .catch(e => {
+      document.getElementById('kundeContent').innerHTML =
+        `<div class="empty">${e.message}<br>Falls du das gerade als Mitarbeiter testest: erst n8n-Webhook-Adressen oben eintragen.</div>`;
+      switchTab('kunde');
+    });
+} else {
+  loadRecords();
+}
+
+</script>
+
+</body>
+</html>
