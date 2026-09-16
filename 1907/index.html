@@ -546,11 +546,11 @@
       <div class="row2">
         <div class="field">
           <label for="vonDatum">Abwesend von</label>
-          <input type="date" id="vonDatum" name="vonDatum" required>
+          <input type="date" id="vonDatum" name="vonDatum">
         </div>
         <div class="field">
           <label for="bisDatum">Abwesend bis</label>
-          <input type="date" id="bisDatum" name="bisDatum" required>
+          <input type="date" id="bisDatum" name="bisDatum">
         </div>
       </div>
 
@@ -763,8 +763,7 @@
       }
     }
     const von = feld('vonDatum'), bis = feld('bisDatum');
-    if (!von || !bis) return zeigeFehler('Bitte tragen Sie ein, von wann bis wann Sie weg sind.');
-    if (bis < von)    return zeigeFehler('Das Rückkehrdatum liegt vor dem Abreisedatum.');
+    if (von && bis && bis < von) return zeigeFehler('Das Rückkehrdatum liegt vor dem Abreisedatum.');
     if (!document.getElementById('dsgvo').checked){
       return zeigeFehler('Bitte setzen Sie das Häkchen zur Datenverarbeitung — sonst dürfen wir die Anfrage nicht bearbeiten.');
     }
@@ -782,8 +781,8 @@
         adresse:         feld('adresse'),
         ansprechpartner: feld('ansprechpartner')
       },
-      abwesend_von:  von,
-      abwesend_bis:  bis,
+      abwesend_von:  von || null,
+      abwesend_bis:  bis || null,
       was_original:  feld('was'),
       fotos:         fotos.map((f,i) => ({ dateiname: f.name, position: i + 1, data: f.data })),
       einwilligung:  true,
