@@ -312,7 +312,7 @@
     opacity:0.6;
     margin: -3px 0 6px;
   }
-  .field input, .field textarea{
+  .field input, .field textarea, .field select{
     width:100%;
     padding: 11px 13px;
     border-radius: 9px;
@@ -322,8 +322,18 @@
     background: var(--putz);
     color: var(--ink);
   }
-  .field input:focus, .field textarea:focus{
-    background:white;
+  .field select{
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 16px;
+    padding-right: 36px;
+  }
+  .field select:invalid{ color: #767268; }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    background-color:white;
     border-color: var(--ink);
   }
   .field textarea{ resize:vertical; min-height:90px; }
@@ -622,6 +632,19 @@
         <input type="text" id="adresse" name="adresse" required autocomplete="street-address">
       </div>
 
+      <div class="field">
+        <label for="quelle_auswahl">Wie sind Sie auf uns aufmerksam geworden?</label>
+        <select id="quelle_auswahl" name="quelle_auswahl">
+          <option value="" selected>Bitte auswählen (optional)</option>
+          <option value="Hennefer Stadtmagazin">Hennefer Stadtmagazin</option>
+          <option value="Siegburger Stadtmagazin">Siegburger Stadtmagazin</option>
+          <option value="Eitorfer Stadtmagazin">Eitorfer Stadtmagazin</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Empfehlung">Empfehlung</option>
+          <option value="Sonstiges">Sonstiges</option>
+        </select>
+      </div>
+
       <div class="check">
         <input type="checkbox" id="dsgvo" required>
         <label for="dsgvo">Ich bin einverstanden, dass meine Angaben und Fotos zur Bearbeitung meiner Anfrage gespeichert und verarbeitet werden. <a href="https://www.ichbindermaler.de/datenschutzerklaerung">Datenschutz</a></label>
@@ -807,8 +830,9 @@
        anfrage_id, status und bot{} ergaenzt n8n, die Fotos werden dort
        nach R2 geschoben und durch {key, beschriftung} ersetzt. */
     const daten = {
-      typ:    'urlaubsaktion',
-      quelle: quelle,
+      typ:            'urlaubsaktion',
+      quelle:         quelle,
+      quelle_angabe:  feld('quelle_auswahl') || null,
       kunde: {
         name:            feld('name'),
         email:           feld('email'),
