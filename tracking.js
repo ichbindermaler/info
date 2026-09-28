@@ -21,12 +21,18 @@
       var daten = { event: event, quelle: quelle, pfad: location.pathname,
                     referrer: document.referrer || null, zeit: new Date().toISOString() };
       if (extra){ for (var k in extra){ daten[k] = extra[k]; } }
-      var payload = JSON.stringify(daten);
-      if (navigator.sendBeacon){
-        navigator.sendBeacon(TRACK_URL, new Blob([payload], {type:'application/json'}));
-      } else {
-        fetch(TRACK_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: payload, keepalive:true}).catch(function(){});
-      }
+      /* Bewusst kein sendBeacon: das schickt Cross-Origin-Anfragen
+         immer mit Credentials, was vom n8n-Webhook einen expliziten
+         Access-Control-Allow-Credentials-Header verlangen würde.
+         fetch mit keepalive übersteht einen Seitenwechsel genauso
+         und braucht nur das normale CORS-Setup, das schon läuft. */
+      fetch(TRACK_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(daten),
+        keepalive: true,
+        credentials: 'omit'
+      }).catch(function(){});
     }catch(err){ /* Tracking darf die Seite nie stoeren */ }
   }
 
