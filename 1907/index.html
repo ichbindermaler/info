@@ -522,7 +522,7 @@
       <h1>Sie fahren in den Urlaub? <span class="accent">Wir kümmern uns um Ihr Zuhause.</span></h1>
       <p class="lede">Streichen, Möbel zurückrücken, alles ordentlich hinterlassen — Sie schicken uns ein Foto, sagen uns, wann Sie weg sind, und kommen heim in ein Zuhause, auf das Sie sich freuen. Sie mussten sich um nichts kümmern.</p>
       <div class="ctas">
-        <a href="#anfrage" class="btn btn-primary">Foto schicken &amp; Urlaubsangebot anfragen</a>
+        <a href="#anfrage" class="btn btn-primary" id="heroCta">Foto schicken &amp; Urlaubsangebot anfragen</a>
       </div>
     </div>
 
@@ -695,6 +695,7 @@
   </div>
 </footer>
 
+<script src="/tracking.js"></script>
 <script>
 (function(){
   /* -----------------------------------------------------------
@@ -725,6 +726,12 @@
 
   /* Quelle aus dem QR-Code: /1907?q=stadtmagazin */
   const quelle = new URLSearchParams(location.search).get('q') || '1907';
+
+  /* Klick-Tracking kommt aus der gemeinsamen /tracking.js (Seitenaufruf
+     wird dort schon automatisch gemeldet) — hier nur die Seiten-eigenen
+     Events, defensiv falls tracking.js mal nicht laedt (Adblocker o.ä.) */
+  const heroCta = document.getElementById('heroCta');
+  if (heroCta) heroCta.addEventListener('click', () => { if (window.tracke) window.tracke('cta_klick'); });
 
   /* Abwesenheit kann nicht in der Vergangenheit liegen */
   const heute = new Date().toISOString().slice(0,10);
@@ -865,6 +872,7 @@
         body: JSON.stringify(daten)
       });
       if (!antwort.ok) throw new Error(antwort.status);
+      if (window.tracke) window.tracke('formular_absenden');
       form.classList.add('hide');
       successBox.classList.add('show');
       successBox.scrollIntoView({block:'center'});
